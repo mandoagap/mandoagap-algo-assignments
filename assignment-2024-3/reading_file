@@ -1,0 +1,39 @@
+import argparse
+import random
+from collections import defaultdict, deque
+
+
+def diavasma_arxeiou(file_name):
+    """Διάβασε το γράφο από ένα αρχείο και κατασκεύασε μια λίστα γειτνίασης."""
+    graph_data = open(file_name).readlines()
+    grafo = defaultdict(list)
+    for edge in graph_data:
+        nodes = edge.split()
+        u = int(nodes[0])
+        v = int(nodes[1])
+        grafo[u].append(v)
+    return grafo
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('grafos', type=str)
+    parser.add_argument('k', type=int)
+    parser.add_argument('methodos', choices=['max_degree', 'greedy'])
+    parser.add_argument('pithanotita', type=float)
+    parser.add_argument('epanalipseis', type=int)
+    parser.add_argument('-r', '--random_seed', type=int, default=None)
+    args = parser.parse_args()
+    
+    grafos = diavasma_arxeiou(args.grafos)
+    
+    print(grafos)
+
+    print(args.methodos, args.k, args.pithanotita, args.epanalipseis)
+
+    if args.methodos == 'max_degree':
+        print("not implemented")
+    elif args.methodos == 'greedy':
+        print("not implemented")
+
+if __name__ == "__main__":
+    main()

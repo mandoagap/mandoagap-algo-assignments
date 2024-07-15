@@ -1,0 +1,82 @@
+import argparse
+import random
+from collections import defaultdict, deque
+
+def prosomoiosi_anexartitis_allilouxias(grafo, seeds, pithanotita):
+    """Προσομοίωση της Ανεξάρτητης Αλληλουχίας."""
+    energoi_synolou = set(seeds)
+    oura_kombon = deque(seeds)
+    
+    while len(oura_kombon) > 0:
+        kombos = oura_kombon.popleft()
+        for geitonas in grafo[kombos]:
+            if geitonas not in energoi_synolou:
+                rand = random.random()
+                if rand < pithanotita:
+                    energoi_synolou.add(geitonas)
+                    oura_kombon.append(geitonas)
+    
+    return len(energoi_synolou)
+
+def ypologismos_perithoriakou_ofelous(grafo, seeds, neos_kombos, p, epanalipseis):
+    """Υπολογισμός του περιθωριακού οφέλους από την προσθήκη ενός νέου κόμβου."""
+    trexousa_epiroi = sum(prosomoiosi_anexartitis_allilouxias(grafo, seeds, p) for _ in range(epanalipseis)) / epanalipseis
+    nea_epiroi = sum(prosomoiosi_anexartitis_allilouxias(grafo, seeds + [neos_kombos], p) for _ in range(epanalipseis)) / epanalipseis
+    epiroi_ayksisi = nea_epiroi - trexousa_epiroi
+    return epiroi_ayksisi
+
+def select_seeds_max_degree(grafo, k):
+    """Επιλογή κόμβων με το μέγιστο βαθμό γειτνίασης."""
+    vathmos = {kombos: len(geitones) for kombos, geitones in grafo.items()}
+    taksinomimenoi_kombos = sorted(vathmos, key=lambda x: (-vathmos[x], x))
+    return taksinomimenoi_kombos[:k]
+
+def select_seeds_greedy(grafo, arithmos_seeds, pithanotita, epanalipseis):
+    """Greedy αλγόριθμος για επιλογή seeds."""
+    lista_seeds = []
+    for _ in range(arithmos_seeds):
+        kalyteros_kombos = None
+        megisti_epiroi = -1
+        for kombos in set(grafo.keys()) - set(lista_seeds):
+            kerdos = ypologismos_perithoriakou_ofelous(grafo, lista_seeds, kombos, pithanotita, epanalipseis)
+            if kerdos > megisti_epiroi:
+                megisti_epiroi = kerdos
+                kalyteros_kombos = kombos
+        lista_seeds.append(kalyteros_kombos)
+    return lista_seeds
+
+def diavasma_arxeiou(file_name):
+    """Διάβασε το γράφο από ένα αρχείο και κατασκεύασε μια λίστα γειτνίασης."""
+    graph_data = open(file_name).readlines()
+    grafo = defaultdict(list)
+    for edge in graph_data:
+        nodes = edge.split()
+        u = int(nodes[0])
+        v = int(nodes[1])
+        grafo[u].append(v)
+    return grafo
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('path', type=str)
+    parser.add_argument('k', type=int)
+    parser.add_argument('methodos', choices=['max_degree', 'greedy'])
+    parser.add_argument('pithanotita', type=float)
+    parser.add_argument('epanalipseis', type=int)
+    parser.add_argument('-r', '--random_seed', type=int, default=None)
+    args = parser.parse_args()
+
+    grafos = diavasma_arxeiou(args.path)
+
+    if args.methodos == 'max_degree':
+        seeds = select_seeds_max_degree(grafos, args.k)
+    elif args.methodos == 'greedy':
+        seeds = select_seeds_greedy(grafos, args.k, args.pithanotita, args.epanalipseis)
+
+    epirroes = [round(sum(prosomoiosi_anexartitis_allilouxias(grafos, seeds[:i+1], args.pithanotita) for _ in range(args.epanalipseis)) / args.epanalipseis, 3) for i in range(len(seeds))]
+
+    print(f"Seeds {seeds}")
+    print(f"Influences {epirroes}")
+
+if __name__ == "__main__":
+    main()
